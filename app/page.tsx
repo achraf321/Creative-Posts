@@ -63,6 +63,12 @@ if(data?.image){
 
   return (
     <div className="flex flex-col space-y-4 p-4">
+          <div className="relative w-full max-w-full h-[250px]">
+            <Image src="/cp.png" alt=""
+ fill
+    className="w-full object-cover"/>
+          </div>
+
       <h1>Title :</h1>
       <input type="text"
       name="title"

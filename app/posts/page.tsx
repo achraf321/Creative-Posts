@@ -6,6 +6,7 @@ import {formatDistanceToNow} from "date-fns"
 import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircle, Plus, Star, X } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
+import toast from 'react-hot-toast'
 
 interface Post {
   id : string,
@@ -49,6 +50,7 @@ getPosts()
   }
 
   function handleClose () {
+    toast.success("Thanks for your response")
     setIsOpen(false)
   localStorage.setItem("shown" , "true")
   }
