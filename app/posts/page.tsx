@@ -1,12 +1,13 @@
 "use client"
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {formatDistanceToNow} from "date-fns"
 import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircle, Plus, Star, X } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 interface Post {
   id : string,
@@ -18,17 +19,24 @@ interface Post {
 
 const page = () => {
 
-const [posts , setPosts] = useState<Post[]>([])
-const [isloading , setIsLoading] = useState<boolean>(true)
+  const [posts , setPosts] = useState<Post[]>([])
+  const [isloading , setIsLoading] = useState<boolean>(true)
   const [isOpen , setIsOpen] = useState(false)
+  const [page , setPage] = useState(1)
+  const [hasMore , setHasMore] = useState(true)
+
+const router = useRouter()
+const loaderRef = useRef<HTMLDivElement | null>(null)
 
 async function getPosts () {
   try {
-    const res = await fetch("/api/get-posts")
+    const res = await fetch(`/api/get-posts?limit=10&page=${page}`)
     if(!res.ok) throw new Error("Error occured - Server")
       const data = await res.json()
-    setPosts(data)
-    console.log(posts)
+    setPosts(prev => [...prev , ...data])
+    if(data.length < 10){
+      setHasMore(false)
+    }
   } catch (error) {
     console.log("Error occured - try again later")
   } finally {
@@ -38,8 +46,24 @@ async function getPosts () {
 
 useEffect(() => {
   handleShowPopUp()
-getPosts()
-}, [])
+  getPosts()
+}, [page])
+
+useEffect(() => {
+const observer = new IntersectionObserver((entries) => {
+  const loader = entries[0]
+  if(loader.isIntersecting){
+    setPage((prev) => prev + 1)
+  }
+})
+
+if(loaderRef.current) observer.observe(loaderRef.current)
+
+  return () => {
+   if(loaderRef.current) observer.unobserve(loaderRef.current)
+    observer.disconnect()
+  }
+}, [hasMore])
 
 
   function handleShowPopUp (){
@@ -100,8 +124,8 @@ Array.from({length : 3}).map((_ , i) => (
 </div>
   ))
 
-      ): (posts.length > 0 ? posts.map((post , index) => (
-            <div key={index} className='border border-neutral-700 p-2 rounded-sm'>
+      ): ( posts.length > 0 ? posts.map((post , index) => (
+            <div onClick={() => router.push(`/posts/${post.id}`)} key={index} className='border border-neutral-700 p-2 rounded-sm'>
               <div className='flex gap-x-2'>
 <div className='relative h-13 w-13 size-13 overflow-hidden'>
   <Image src="/photopr.jpg" alt=''
@@ -136,6 +160,9 @@ className='rounded-full'/>
           <h1 className='flex items-center gap-x-1'>No posts found <AlertCircle/></h1>
         </div>
       ))}
+      {hasMore && (
+        <div ref={loaderRef}>Loading...</div>
+      )}
  </div>
     </div>
   )
