@@ -3,15 +3,10 @@ import { formatDistanceToNow } from 'date-fns'
 import Image from 'next/image'
 import React from 'react'
 
-interface PageProps {
-  params: {
-    id: string
-  }
-}
 
-const page = async ({params}: PageProps) => {
+const page = async ({params}: {params : Promise<{id : string}>}) => {
 
-    const {id} = params
+    const {id} = await params
 
     const post = await prisma.post.findUnique({
         where : {id}
